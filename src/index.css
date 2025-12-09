@@ -1,0 +1,244 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ----------------------------
+   Global Base Styles
+   (keeps your dark, cozy theme)
+----------------------------- */
+:root {
+  --brand-pink: #f472b6;
+  --brand-plum: #2b0f1a;
+}
+
+body {
+  @apply bg-black text-white font-sans antialiased;
+}
+
+#root {
+  @apply min-h-screen;
+}
+
+/* ----------------------------
+   Navbar background + logo badge
+----------------------------- */
+nav {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.38), rgba(0, 0, 0, 0));
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.logo-badge {
+  background: linear-gradient(90deg, rgba(244,114,182,0.12), rgba(199,21,133,0.06));
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 6px 18px rgba(199,21,133,0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.logo-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(199,21,133,0.22);
+}
+
+/* ----------------------------
+   Hero overlay + image treatment
+----------------------------- */
+/* Slightly stronger overlay for improved text contrast */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8,6,8,0.36), rgba(0,0,0,0.72));
+  pointer-events: none;
+}
+
+/* unify photo tone across site */
+.brand-grade {
+  filter: contrast(1.04) saturate(0.9) brightness(0.98);
+  transition: filter 0.35s ease;
+}
+
+/* card emphasis */
+.hero-card {
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 12px 30px rgba(10,6,10,0.6);
+}
+
+/* ----------------------------
+   Spacing / card adjustments
+   (compact versions used in updated pages)
+----------------------------- */
+.rounded-2xl { border-radius: 1rem; }
+.rounded-xl { border-radius: 0.75rem; }
+
+.compact-card {
+  padding: 0.9rem;
+  border-radius: 12px;
+}
+
+/* ----------------------------
+   Fade-Up Animation
+----------------------------- */
+@keyframes fade-up {
+  0% { opacity: 0; transform: translateY(18px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up 0.7s ease-out both; }
+.animate-fade-up-delay { animation: fade-up 1s ease-out both; }
+
+/* ----------------------------
+   Floating Animation (less dramatic)
+----------------------------- */
+@keyframes float-soft {
+  0%,100%{ transform: translateY(0); }
+  50%{ transform: translateY(-6px); } /* reduced from -10px */
+}
+.animate-float-soft { animation: float-soft 6s ease-in-out infinite; }
+
+/* ----------------------------
+   Mobile Menu Animation
+----------------------------- */
+@keyframes slide-down {
+  0% { opacity: 0; transform: translateY(-12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.mobile-menu-open { animation: slide-down 0.28s ease-out forwards; }
+
+/* ----------------------------
+   Sparkles Animation
+----------------------------- */
+@keyframes sparkle-move {
+  0% { opacity: 0; transform: translateY(0) scale(0.8); }
+  10% { opacity: 1; }
+  50% { opacity: 0.9; transform: translateY(-24px) scale(1.05); }
+  100% { opacity: 0; transform: translateY(-48px) scale(0.6); }
+}
+.sparkle {
+  position: absolute;
+  width: 7px; /* slightly smaller */
+  height: 7px;
+  background: radial-gradient(circle at 30% 30%,
+    rgba(255,255,255,0.95), rgba(255,255,255,0.6) 35%, transparent 60%);
+  border-radius: 50%;
+  filter: drop-shadow(0 0 6px rgba(255,200,230,0.6));
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ----------------------------
+   Hair Shine Overlay (Hero Image)
+----------------------------- */
+@keyframes hair-shine {
+  0% { transform: translateX(-120%); }
+  50% { transform: translateX(40%); }
+  100% { transform: translateX(120%); }
+}
+.hair-shine {
+  position: absolute;
+  left: -30%;
+  top: 0;
+  width: 160%;
+  height: 100%;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  opacity: 0.16; /* slight reduction */
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 48%, rgba(255,255,255,0) 100%);
+  transform: translateX(-120%);
+  animation: hair-shine 2.6s ease-in-out infinite;
+  filter: blur(5px);
+}
+
+/* ----------------------------
+   Carousel styling
+----------------------------- */
+.carousel-track {
+  display: flex;
+  gap: 0.5rem;
+  will-change: transform;
+  transition: transform 0.6s ease;
+}
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.22);
+  border: none;
+}
+.carousel-dot.active { background: rgba(255,182,193,0.95); }
+
+/* small tweak: reduce default gap between sections a little via utility override */
+/* Helpful utility when you want denser spacing on repeated sections */
+.section-tight > * + * { margin-top: 0.75rem; }
+
+/* ----------------------------
+   Small UI helpers
+----------------------------- */
+/* slightly stronger CTA shadow for contrast on dark bg */
+.cta-strong {
+  box-shadow: 0 12px 30px rgba(199,21,133,0.14);
+}
+
+/* sticky mobile CTA size tweak */
+.mobile-cta {
+  border-radius: 999px;
+  padding: 0.5rem 0.9rem;
+  font-weight: 600;
+}
+
+/* ----------------------------
+   Shimmer Animation
+----------------------------- */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+/* ----------------------------
+   Pulse Slow Animation
+----------------------------- */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.9; }
+}
+.animate-pulse-slow {
+  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ----------------------------
+   Bounce Slow Animation
+----------------------------- */
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
+
+/* ----------------------------
+   Accessibility: prefers-reduced-motion
+----------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-up-delay,
+  .animate-float-soft,
+  .hair-shine,
+  .sparkle,
+  .carousel-track,
+  .animate-shimmer,
+  .animate-pulse-slow {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ----------------------------
+   Responsive tweaks
+----------------------------- */
+@media (max-width: 640px) {
+  /* reduce hero title size on small */
+  h1 { font-size: 1.45rem; }
+  .logo-badge img { height: 28px; }
+}

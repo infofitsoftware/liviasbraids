@@ -1,0 +1,23 @@
+# Reverse Proxy for Node.js Server
+RewriteEngine On
+
+# Enable proxy module
+<IfModule mod_proxy.c>
+    ProxyPreserveHost On
+    ProxyRequests Off
+</IfModule>
+
+# Proxy API requests to Node.js server on port 5000
+RewriteCond %{REQUEST_URI} ^/api
+RewriteRule ^api/(.*)$ http://localhost:5000/api/$1 [P,L]
+
+# Serve static assets directly (faster) - but only actual asset files
+# Check if it's a static file extension AND the file exists
+RewriteCond %{REQUEST_URI} \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|webp)$ [NC]
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Proxy all other requests to Node.js server (for React Router)
+# This includes routes like /admin/login, /services, /, etc.
+# Node.js will serve index.html for these routes
+RewriteRule ^(.*)$ http://localhost:5000/$1 [P,L]

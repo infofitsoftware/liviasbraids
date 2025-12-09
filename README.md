@@ -114,6 +114,98 @@ This creates a `dist` folder with the production-ready frontend.
 └── dist/                  # Production build (generated)
 ```
 
+## **Hostinger SSH Deployment (Backend + Frontend)**
+
+Follow these steps after connecting to your server over SSH. Commands assume you are inside `public_html`.
+
+### 1) Prepare server
+- Install Node.js (via nvm or Hostinger installer).
+- Install PM2 globally:
+  ```bash
+  npm install -g pm2
+  ```
+
+### 2) Upload project files
+- Upload these to `public_html/`:
+  - `package.json`, `package-lock.json`
+  - `server/` folder
+  - `dist/` folder (built locally with `npm run build`)
+  - `.env` (create/edit on server)
+- Ensure `public/uploads/` exists (for images).
+
+### 3) Create `.env` on server
+Example:
+```env
+NODE_ENV=production
+PORT=5000
+DB_HOST=217.21.95.154        # or your DB host
+DB_USER=u395208679_liviasbraids
+DB_PASSWORD=Liviasbraids007  # update if changed
+DB_NAME=u395208679_liviasbraids
+JWT_SECRET=replace-with-strong-secret
+VITE_API_URL=https://your-domain.com/api
+```
+
+### 4) Install dependencies (server)
+From `public_html`:
+```bash
+npm install --production
+```
+
+### 5) Start backend with PM2
+```bash
+pm2 start server/index.js --name livias-braids
+pm2 save
+```
+
+Common PM2 commands:
+```bash
+pm2 status
+pm2 logs livias-braids --lines 100
+pm2 restart livias-braids
+pm2 stop livias-braids
+```
+
+### 6) Serve frontend
+- Build locally: `npm run build`
+- Upload the generated `dist/` folder to `public_html/dist/`
+- Ensure your `.htaccess` (in `public_html`) proxies `/api` to Node and serves static assets. Example:
+```
+RewriteEngine On
+
+# Serve static assets directly
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Proxy API to Node
+RewriteRule ^api/(.*)$ http://localhost:5000/api/$1 [P,L]
+
+# React Router fallback to Node (serving dist/index.html)
+RewriteRule ^(.*)$ http://localhost:5000/$1 [P,L]
+```
+
+### 7) Verify
+- API health: `curl http://localhost:5000/api/health`
+- Public: `https://your-domain.com/`
+- Admin: `https://your-domain.com/admin/login`
+
+### 8) Update flow (when deploying new build)
+1. Locally: `npm run build`
+2. Upload new `dist/` to `public_html/dist/` (replace existing)
+3. If backend changes:
+   ```bash
+   npm install --production   # if deps changed
+   pm2 restart livias-braids
+   pm2 logs livias-braids --lines 50
+   ```
+
+### 9) Database init (one-time, optional from local)
+If DB not initialized:
+```bash
+npm run init-db
+```
+Or run the SQL in `server/database/schema.sql` directly against MySQL.
+
 ## **API Endpoints**
 
 ### Authentication

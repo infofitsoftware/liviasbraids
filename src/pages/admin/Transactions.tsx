@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../utils/api';
+import AdminNav from '../../components/AdminNav';
 
 interface Transaction {
   id: number;
@@ -13,6 +14,12 @@ interface Transaction {
 const Transactions: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [summary, setSummary] = useState({ total_income: 0, total_expense: 0, net_profit: 0 });
+
+  // Helper to convert to number
+  const toNumber = (value: any): number => {
+    const num = Number(value);
+    return isNaN(num) ? 0 : num;
+  };
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -32,7 +39,11 @@ const Transactions: React.FC = () => {
         api.getTransactionSummary(),
       ]);
       setTransactions(transactionsData);
-      setSummary(summaryData);
+      setSummary({
+        total_income: toNumber(summaryData.total_income),
+        total_expense: toNumber(summaryData.total_expense),
+        net_profit: toNumber(summaryData.net_profit),
+      });
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -76,6 +87,8 @@ const Transactions: React.FC = () => {
   return (
     <div className="min-h-screen bg-black text-white p-8">
       <div className="max-w-7xl mx-auto">
+        <AdminNav />
+
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Transactions</h1>
           <button
@@ -139,7 +152,7 @@ const Transactions: React.FC = () => {
                         transaction.type === 'income' ? 'text-green-400' : 'text-red-400'
                       }`}
                     >
-                      {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                      {transaction.type === 'income' ? '+' : '-'}${toNumber(transaction.amount).toFixed(2)}
                     </td>
                     <td className="px-6 py-4">{transaction.description}</td>
                     <td className="px-6 py-4 text-sm text-slate-400">

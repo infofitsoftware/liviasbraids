@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../utils/api';
+import AdminNav from '../../components/AdminNav';
 
 interface Payment {
   id: number;
@@ -77,11 +78,13 @@ const Payments: React.FC = () => {
     );
   }
 
-  const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
+  const totalAmount = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
   return (
     <div className="min-h-screen bg-black text-white p-8">
       <div className="max-w-7xl mx-auto">
+        <AdminNav />
+
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Payments</h1>
           <button
@@ -121,7 +124,7 @@ const Payments: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">#{payment.booking_id}</td>
                     <td className="px-6 py-4 font-semibold text-green-400">
-                      ${payment.amount.toFixed(2)}
+                      ${Number(payment.amount || 0).toFixed(2)}
                     </td>
                     <td className="px-6 py-4 capitalize">{payment.payment_method}</td>
                     <td className="px-6 py-4 text-sm text-slate-300 max-w-xs truncate">

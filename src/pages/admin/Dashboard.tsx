@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../utils/api';
+import AdminNav from '../../components/AdminNav';
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -12,6 +13,12 @@ const Dashboard: React.FC = () => {
     totalExpense: 0,
   });
   const [loading, setLoading] = useState(true);
+
+  const toNumber = (value: unknown) => {
+    if (typeof value === "number") return value;
+    const num = parseFloat(String(value ?? "0"));
+    return Number.isNaN(num) ? 0 : num;
+  };
 
   useEffect(() => {
     loadStats();
@@ -24,11 +31,14 @@ const Dashboard: React.FC = () => {
         api.getTransactionSummary(),
       ]);
 
+      const totalIncome = toNumber(summary.total_income);
+      const totalExpense = toNumber(summary.total_expense);
+
       setStats({
         totalBookings: bookings.length,
         pendingBookings: bookings.filter((b: any) => b.status === 'pending').length,
-        totalIncome: summary.total_income || 0,
-        totalExpense: summary.total_expense || 0,
+        totalIncome,
+        totalExpense,
       });
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -48,6 +58,8 @@ const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-black text-white p-8">
       <div className="max-w-7xl mx-auto">
+        <AdminNav />
+
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
@@ -76,13 +88,13 @@ const Dashboard: React.FC = () => {
           />
           <StatCard
             title="Total Income"
-            value={`$${stats.totalIncome.toFixed(2)}`}
+            value={`$${toNumber(stats.totalIncome).toFixed(2)}`}
             icon="💰"
             color="green"
           />
           <StatCard
             title="Net Profit"
-            value={`$${(stats.totalIncome - stats.totalExpense).toFixed(2)}`}
+            value={`$${(toNumber(stats.totalIncome) - toNumber(stats.totalExpense)).toFixed(2)}`}
             icon="📊"
             color="blue"
           />

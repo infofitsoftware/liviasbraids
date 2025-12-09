@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../utils/api';
+import AdminNav from '../../components/AdminNav';
 
 interface GalleryImage {
   id: number;
@@ -69,6 +70,8 @@ const Gallery: React.FC = () => {
   return (
     <div className="min-h-screen bg-black text-white p-8">
       <div className="max-w-7xl mx-auto">
+        <AdminNav />
+
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Gallery Management</h1>
           <label className="bg-pink-500 text-black px-6 py-2 rounded-lg font-semibold hover:bg-pink-400 cursor-pointer">

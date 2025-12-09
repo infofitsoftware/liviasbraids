@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../utils/api';
+import AdminNav from '../../components/AdminNav';
 
 interface Booking {
   id: number;
@@ -19,6 +20,13 @@ const Bookings: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [completeBooking, setCompleteBooking] = useState<Booking | null>(null);
+  const [paymentData, setPaymentData] = useState({
+    amount: '',
+    payment_method: 'cash',
+    notes: '',
+  });
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -32,6 +40,12 @@ const Bookings: React.FC = () => {
   useEffect(() => {
     loadBookings();
   }, []);
+
+  const toNumber = (value: unknown) => {
+    if (typeof value === "number") return value;
+    const num = parseFloat(String(value ?? "0"));
+    return Number.isNaN(num) ? 0 : num;
+  };
 
   const loadBookings = async () => {
     try {
@@ -81,6 +95,55 @@ const Bookings: React.FC = () => {
     }
   };
 
+  const handleMarkComplete = (booking: Booking) => {
+    setCompleteBooking(booking);
+    const remainingAmount = toNumber(booking.price) - toNumber(booking.total_paid);
+    // Default to remaining amount if positive, otherwise allow user to enter amount
+    setPaymentData({
+      amount: remainingAmount > 0 ? remainingAmount.toFixed(2) : '',
+      payment_method: 'cash',
+      notes: `Payment for booking #${booking.id}`,
+    });
+    setShowCompleteModal(true);
+  };
+
+  const handleCompleteSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!completeBooking) return;
+
+    try {
+      const paymentAmount = parseFloat(paymentData.amount) || 0;
+      
+      // Create payment record only if amount > 0 (this will automatically create a transaction)
+      if (paymentAmount > 0) {
+        await api.createPayment({
+          booking_id: completeBooking.id,
+          amount: paymentAmount,
+          payment_method: paymentData.payment_method,
+          notes: paymentData.notes || `Payment for booking #${completeBooking.id}`,
+        });
+      }
+
+      // Update booking status to completed
+      await api.updateBooking(completeBooking.id, {
+        name: completeBooking.name,
+        phone: completeBooking.phone,
+        preferred_date: completeBooking.preferred_date || '',
+        preferred_time: completeBooking.preferred_time || '',
+        style_description: completeBooking.style_description || '',
+        status: 'completed',
+        price: completeBooking.price?.toString() || '0',
+      });
+
+      setShowCompleteModal(false);
+      setCompleteBooking(null);
+      setPaymentData({ amount: '', payment_method: 'cash', notes: '' });
+      loadBookings();
+    } catch (error: any) {
+      alert(error.message || 'Error completing booking');
+    }
+  };
+
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       pending: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/50',
@@ -102,6 +165,8 @@ const Bookings: React.FC = () => {
   return (
     <div className="min-h-screen bg-black text-white p-8">
       <div className="max-w-7xl mx-auto">
+        <AdminNav />
+
         <h1 className="text-3xl font-bold mb-8">Bookings Management</h1>
 
         <div className="bg-slate-900/70 border border-white/10 rounded-2xl overflow-hidden">
@@ -142,10 +207,18 @@ const Bookings: React.FC = () => {
                         {booking.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4">${booking.price || '0.00'}</td>
-                    <td className="px-6 py-4">${(booking.total_paid || 0).toFixed(2)}</td>
+                    <td className="px-6 py-4">${toNumber(booking.price).toFixed(2)}</td>
+                    <td className="px-6 py-4">${toNumber(booking.total_paid).toFixed(2)}</td>
                     <td className="px-6 py-4">
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
+                        {booking.status === 'pending' && (
+                          <button
+                            onClick={() => handleMarkComplete(booking)}
+                            className="px-3 py-1 bg-green-500/20 border border-green-500/50 text-green-300 rounded text-sm hover:bg-green-500/30 font-semibold"
+                          >
+                            Mark Complete
+                          </button>
+                        )}
                         <button
                           onClick={() => handleEdit(booking)}
                           className="px-3 py-1 bg-blue-500/20 border border-blue-500/50 text-blue-300 rounded text-sm hover:bg-blue-500/30"
@@ -166,6 +239,93 @@ const Bookings: React.FC = () => {
             </table>
           </div>
         </div>
+
+        {showCompleteModal && completeBooking && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+            <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 max-w-md w-full">
+              <h2 className="text-2xl font-bold mb-2">Mark Booking as Complete</h2>
+              <p className="text-slate-400 mb-6">
+                Booking #{completeBooking.id} - {completeBooking.name}
+              </p>
+              <form onSubmit={handleCompleteSubmit} className="space-y-4">
+                <div className="bg-slate-800/50 rounded-lg p-4 mb-4">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-slate-300">Total Price:</span>
+                    <span className="font-semibold">${toNumber(completeBooking.price).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-slate-300">Already Paid:</span>
+                    <span className="text-green-400">${toNumber(completeBooking.total_paid).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t border-white/10">
+                    <span className="text-slate-300 font-semibold">Remaining:</span>
+                    <span className="font-bold text-yellow-400">
+                      ${(toNumber(completeBooking.price) - toNumber(completeBooking.total_paid)).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-300 mb-1">Payment Amount</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={paymentData.amount}
+                    onChange={(e) => setPaymentData({ ...paymentData, amount: e.target.value })}
+                    className="w-full rounded-lg bg-black border border-white/15 px-3 py-2"
+                    min="0"
+                    placeholder="Enter payment amount"
+                  />
+                  <p className="text-xs text-slate-400 mt-1">
+                    Leave empty or enter 0 if payment was already collected
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-300 mb-1">Payment Method</label>
+                  <select
+                    value={paymentData.payment_method}
+                    onChange={(e) => setPaymentData({ ...paymentData, payment_method: e.target.value })}
+                    className="w-full rounded-lg bg-black border border-white/15 px-3 py-2"
+                  >
+                    <option value="cash">Cash</option>
+                    <option value="card">Card</option>
+                    <option value="venmo">Venmo</option>
+                    <option value="zelle">Zelle</option>
+                    <option value="paypal">PayPal</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-300 mb-1">Notes (Optional)</label>
+                  <textarea
+                    value={paymentData.notes}
+                    onChange={(e) => setPaymentData({ ...paymentData, notes: e.target.value })}
+                    className="w-full rounded-lg bg-black border border-white/15 px-3 py-2"
+                    rows={3}
+                  />
+                </div>
+                <div className="flex gap-4 mt-6">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-green-500 text-black px-6 py-3 rounded-lg font-semibold hover:bg-green-400"
+                  >
+                    Complete & Record Payment
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCompleteModal(false);
+                      setCompleteBooking(null);
+                      setPaymentData({ amount: '', payment_method: 'cash', notes: '' });
+                    }}
+                    className="flex-1 bg-slate-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-slate-600"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {showModal && (
           <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">

@@ -33,7 +33,12 @@ const GalleryGrid: React.FC = () => {
     }
   };
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  // Use same relative URL behavior as the main API client:
+  // - In production: relative '' (same domain, proxied to /api)
+  // - In development: http://localhost:5000
+  const API_BASE_URL =
+    import.meta.env.VITE_API_URL ||
+    (import.meta.env.PROD ? '' : 'http://localhost:5000');
   const displayImages = useStatic ? galleryItems : images;
 
   if (loading) {
